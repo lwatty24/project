@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Sparkles, Link, MapPin, Star, ChevronRight, Clock, Users, Music } from 'lucide-react';
 import { events } from '../data/events';
 import { useState } from 'react';
@@ -42,6 +42,114 @@ function InfoItem({ icon, label, value }: { icon: React.ReactNode; label: string
   );
 }
 
+const DescriptionSection = ({ description }: { description: any[] | string }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isLongText = typeof description === 'string' && description.length > 200;
+
+  if (!Array.isArray(description) && !isLongText) {
+    return (
+      <p className="text-lg text-white/80 leading-relaxed max-w-xl">
+        {description}
+      </p>
+    );
+  }
+
+  if (Array.isArray(description)) {
+    return (
+      <div className="flex flex-col">
+        <div>
+          <p className="text-lg text-white/80 leading-relaxed max-w-xl mb-4">
+            {description[0]}
+          </p>
+          
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center gap-2 text-sm text-white/60 hover:text-white/80 transition-colors mb-4"
+          >
+            <motion.div
+              animate={{ rotate: isExpanded ? 90 : 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </motion.div>
+            {isExpanded ? 'Show Less' : 'Show More'}
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ 
+                duration: 0.3,
+                ease: "easeInOut",
+                opacity: { duration: 0.2 }
+              }}
+              className="space-y-4 overflow-hidden"
+            >
+              {description.slice(1).map((segment, index) => (
+                <motion.div 
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="space-y-2"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-white/5 border border-white/10">
+                      <Music className="w-4 h-4 text-purple-400" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-white">{segment.title}</h4>
+                      <p className="text-sm text-white/60">{segment.artist}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-white/70 pl-12">
+                    {segment.description}
+                  </p>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // For long string descriptions
+  return (
+    <div className="flex flex-col">
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={isExpanded ? 'expanded' : 'collapsed'}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="text-lg text-white/80 leading-relaxed max-w-xl mb-4"
+        >
+          {isExpanded ? description : `${description.slice(0, 200)}...`}
+        </motion.p>
+      </AnimatePresence>
+      
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center gap-2 text-sm text-white/60 hover:text-white/80 transition-colors"
+      >
+        <motion.div
+          animate={{ rotate: isExpanded ? 90 : 0 }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+        >
+          <ChevronRight className="w-4 h-4" />
+        </motion.div>
+        {isExpanded ? 'Show Less' : 'Show More'}
+      </button>
+    </div>
+  );
+};
+
 export default function EventModal({ eventName, seasonName, chapterNumber, seasonNumber, onClose }: EventModalProps) {
   const normalizedEventName = eventName === "Collision Live Event" ? "Collision" 
     : eventName === "The Device Event" ? "Device Event"
@@ -62,18 +170,18 @@ export default function EventModal({ eventName, seasonName, chapterNumber, seaso
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-hidden"
       onClick={onClose}
     >
-      <div className="h-screen w-screen flex items-center justify-center p-8">
+      <div className="min-h-screen w-screen flex items-center justify-center p-8 overflow-y-auto overflow-x-hidden">
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-[#0A0A0A]/95 w-full max-w-[1400px] rounded-3xl border border-white/10 overflow-hidden"
+          className="bg-[#0A0A0A]/95 w-full max-w-[1400px] rounded-3xl border border-white/10"
           onClick={e => e.stopPropagation()}
         >
-          <div className="grid grid-cols-[1fr_1.5fr] h-[850px] relative">
+          <div className="grid grid-cols-[1fr_1.5fr] max-h-[850px] relative">
             {/* Full-width background image */}
             <div className="absolute inset-0 z-0">
               <img 
@@ -96,91 +204,51 @@ export default function EventModal({ eventName, seasonName, chapterNumber, seaso
 
             {/* Left column */}
             <div className="relative z-10">
-              <div className="h-full p-10 flex flex-col">
+              <div className="h-[850px] p-10 flex flex-col">
                 <button
                   onClick={onClose}
-                  className="self-start p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors mb-6"
+                  className="self-start p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
                 >
                   <X className="w-6 h-6 text-white/80" />
                 </button>
 
-                <div className="flex flex-col h-[calc(100%-4rem)]">
-                  <div className="flex items-center gap-2 mb-3 text-lg">
-                    <span className="font-medium text-blue-400">Chapter {chapterNumber}</span>
-                    <span className="text-white/40">•</span>
-                    <span className="font-medium text-blue-400">Season {seasonNumber}</span>
+                <div className="flex flex-col flex-1 mt-6 overflow-hidden">
+                  <div className="flex-none">
+                    <div className="flex items-center gap-2 mb-3 text-lg">
+                      <span className="font-medium text-blue-400">Chapter {chapterNumber}</span>
+                      <span className="text-white/40">•</span>
+                      <span className="font-medium text-blue-400">Season {seasonNumber}</span>
+                    </div>
+                    <h1 className="text-6xl font-bold text-white mb-6">{eventName}</h1>
                   </div>
-                  
-                  <h1 className="text-6xl font-bold text-white mb-6">{eventName}</h1>
 
-                  <div className="overflow-y-auto custom-scrollbar pr-4">
+                  <div className="overflow-y-auto flex-1 pr-4">
                     <div className="space-y-6">
-                      {Array.isArray(event.description) ? (
-                        <div>
-                          <p className="text-lg text-white/80 leading-relaxed max-w-xl mb-4">
-                            {event.description[0]}
-                          </p>
-                          
-                          <button
-                            onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                            className="flex items-center gap-2 text-sm text-white/60 hover:text-white/80 transition-colors mb-4"
-                          >
-                            <ChevronRight 
-                              className={`w-4 h-4 transition-transform ${isDescriptionExpanded ? 'rotate-90' : ''}`}
-                            />
-                            {isDescriptionExpanded ? 'Show Less' : 'Show More'}
-                          </button>
+                      <DescriptionSection description={event.description} />
 
-                          {isDescriptionExpanded && (
-                            <div className="space-y-4 animate-in slide-in-from-top duration-300">
-                              {event.description.slice(1).map((segment, index) => (
-                                <div key={index} className="space-y-2">
-                                  <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-                                      <Music className="w-4 h-4 text-purple-400" />
-                                    </div>
-                                    <div>
-                                      <h4 className="font-medium text-white">{segment.title}</h4>
-                                      <p className="text-sm text-white/60">{segment.artist}</p>
-                                    </div>
-                                  </div>
-                                  <p className="text-sm text-white/70 pl-12">
-                                    {segment.description}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
+                      <div className="mt-6 pt-6 border-t border-white/10">
+                        <div className="grid grid-cols-2 gap-4">
+                          <InfoCard
+                            icon={<Calendar className="w-5 h-5 text-blue-400" />}
+                            label="Event Date"
+                            value={new Date(event.date).toLocaleDateString()}
+                          />
+                          <InfoCard
+                            icon={isSeasonLaunch ? 
+                              <MapPin className="w-5 h-5 text-purple-400" /> : 
+                              <Sparkles className="w-5 h-5 text-green-400" />
+                            }
+                            label="Event Type"
+                            value={event.type}
+                          />
+                          {event.concurrentPlayers && (
+                            <InfoCard
+                              icon={<Users className="w-5 h-5 text-pink-400" />}
+                              label="Peak Players"
+                              value={`${event.concurrentPlayers}M`}
+                            />
                           )}
                         </div>
-                      ) : (
-                        <p className="text-lg text-white/80 leading-relaxed max-w-xl">
-                          {event.description}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="mt-6 pt-6 border-t border-white/10">
-                      <div className="grid grid-cols-2 gap-4">
-                        <InfoCard
-                          icon={<Calendar className="w-5 h-5 text-blue-400" />}
-                          label="Event Date"
-                          value={new Date(event.date).toLocaleDateString()}
-                        />
-                        <InfoCard
-                          icon={isSeasonLaunch ? 
-                            <MapPin className="w-5 h-5 text-purple-400" /> : 
-                            <Sparkles className="w-5 h-5 text-green-400" />
-                          }
-                          label="Event Type"
-                          value={event.type}
-                        />
-                        {event.concurrentPlayers && (
-                          <InfoCard
-                            icon={<Users className="w-5 h-5 text-pink-400" />}
-                            label="Peak Players"
-                            value={`${event.concurrentPlayers}M`}
-                          />
-                        )}
                       </div>
                     </div>
                   </div>
