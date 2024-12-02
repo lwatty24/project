@@ -30,10 +30,12 @@ function getTimeUntilEvent(eventDate: string): string {
   return `${diffDays} day${diffDays > 1 ? 's' : ''} away`;
 }
 
-function InfoItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="flex items-center space-x-3">
-      {icon}
+    <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-3">
+      <div className="p-2 rounded-lg bg-white/5 border border-white/10">
+        {icon}
+      </div>
       <div>
         <p className="text-xs text-white/60">{label}</p>
         <p className="text-sm text-white/90 font-medium">{value}</p>
@@ -87,7 +89,11 @@ const DescriptionSection = ({ description }: { description: any[] | string }) =>
                 ease: "easeInOut",
                 opacity: { duration: 0.2 }
               }}
-              className="space-y-4 overflow-hidden"
+              className="space-y-4 overflow-y-auto max-h-[300px] pr-4 custom-scrollbar"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(255,255,255,0.2) transparent'
+              }}
             >
               {description.slice(1).map((segment, index) => (
                 <motion.div 
@@ -170,26 +176,26 @@ export default function EventModal({ eventName, seasonName, chapterNumber, seaso
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-hidden"
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
       onClick={onClose}
     >
-      <div className="min-h-screen w-screen flex items-center justify-center p-8 overflow-y-auto overflow-x-hidden">
+      <div className="h-screen w-screen flex items-center justify-center p-8">
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-[#0A0A0A]/95 w-full max-w-[1400px] rounded-3xl border border-white/10"
+          className="bg-[#0A0A0A]/95 w-full max-w-[1400px] h-[850px] rounded-3xl border border-white/10"
           onClick={e => e.stopPropagation()}
         >
-          <div className="grid grid-cols-[1fr_1.5fr] max-h-[850px] relative">
+          <div className="grid grid-cols-[1fr_1.5fr] h-full relative">
             {/* Full-width background image */}
             <div className="absolute inset-0 z-0">
               <img 
                 src={event.image} 
                 alt={event.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover rounded-3xl"
               />
-              <div className="absolute inset-0"
+              <div className="absolute inset-0 rounded-3xl"
                 style={{
                   background: `linear-gradient(to right, 
                     rgba(0,0,0,0.95) 0%,
@@ -204,7 +210,8 @@ export default function EventModal({ eventName, seasonName, chapterNumber, seaso
 
             {/* Left column */}
             <div className="relative z-10">
-              <div className="h-[850px] p-10 flex flex-col">
+              <div className="h-full p-10 flex flex-col">
+                {/* Close button */}
                 <button
                   onClick={onClose}
                   className="self-start p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
@@ -212,45 +219,46 @@ export default function EventModal({ eventName, seasonName, chapterNumber, seaso
                   <X className="w-6 h-6 text-white/80" />
                 </button>
 
-                <div className="flex flex-col flex-1 mt-6 overflow-hidden">
-                  <div className="flex-none">
-                    <div className="flex items-center gap-2 mb-3 text-lg">
-                      <span className="font-medium text-blue-400">Chapter {chapterNumber}</span>
-                      <span className="text-white/40">•</span>
-                      <span className="font-medium text-blue-400">Season {seasonNumber}</span>
-                    </div>
-                    <h1 className="text-6xl font-bold text-white mb-6">{eventName}</h1>
+                {/* Title section */}
+                <div className="mt-6 flex-none">
+                  <div className="flex items-center gap-2 mb-3 text-lg">
+                    <span className="font-medium text-blue-400">Chapter {chapterNumber}</span>
+                    <span className="text-white/40">•</span>
+                    <span className="font-medium text-blue-400">Season {seasonNumber}</span>
                   </div>
+                  <h1 className="text-6xl font-bold text-white mb-6">{eventName}</h1>
+                </div>
 
-                  <div className="overflow-y-auto flex-1 pr-4">
-                    <div className="space-y-6">
-                      <DescriptionSection description={event.description} />
+                {/* Description section with fixed height */}
+                <div className="flex-1 min-h-0 mb-6">
+                  <div className="h-[400px] overflow-y-auto pr-4 custom-scrollbar">
+                    <DescriptionSection description={event.description} />
+                  </div>
+                </div>
 
-                      <div className="mt-6 pt-6 border-t border-white/10">
-                        <div className="grid grid-cols-2 gap-4">
-                          <InfoCard
-                            icon={<Calendar className="w-5 h-5 text-blue-400" />}
-                            label="Event Date"
-                            value={new Date(event.date).toLocaleDateString()}
-                          />
-                          <InfoCard
-                            icon={isSeasonLaunch ? 
-                              <MapPin className="w-5 h-5 text-purple-400" /> : 
-                              <Sparkles className="w-5 h-5 text-green-400" />
-                            }
-                            label="Event Type"
-                            value={event.type}
-                          />
-                          {event.concurrentPlayers && (
-                            <InfoCard
-                              icon={<Users className="w-5 h-5 text-pink-400" />}
-                              label="Peak Players"
-                              value={`${event.concurrentPlayers}M`}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                {/* Info cards */}
+                <div className="flex-none">
+                  <div className="grid grid-cols-3 gap-4">
+                    <InfoCard
+                      icon={<Calendar className="w-5 h-5 text-blue-400" />}
+                      label="Event Date"
+                      value={new Date(event.date).toLocaleDateString()}
+                    />
+                    <InfoCard
+                      icon={isSeasonLaunch ? 
+                        <MapPin className="w-5 h-5 text-purple-400" /> : 
+                        <Sparkles className="w-5 h-5 text-green-400" />
+                      }
+                      label="Event Type"
+                      value={event.type}
+                    />
+                    {event.concurrentPlayers && (
+                      <InfoCard
+                        icon={<Users className="w-5 h-5 text-pink-400" />}
+                        label="Peak Players"
+                        value={`${event.concurrentPlayers}M`}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -276,17 +284,5 @@ export default function EventModal({ eventName, seasonName, chapterNumber, seaso
         </motion.div>
       </div>
     </motion.div>
-  );
-}
-
-function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="p-4 rounded-xl bg-black/20 border border-white/10">
-      <div className="flex items-center gap-2 mb-2">
-        {icon}
-        <span className="text-sm text-white/60">{label}</span>
-      </div>
-      <span className="text-lg text-white">{value}</span>
-    </div>
   );
 } 
