@@ -1,0 +1,43 @@
+/* Fix chapter ordering and spacing */
+.chapter-select {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.chapter-select > * {
+  flex-direction: row; /* Ensure horizontal layout */
+  order: 0; /* Reset any order properties */
+}
+
+/* Fix timeline view gaps */
+.timeline-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  --timeline-spacing: 150px;
+  --timeline-item-gap: 4rem;
+}
+
+/* Ensure no empty spaces between items */
+.timeline-item {
+  width: 100%;
+  margin: 0;
+  margin-bottom: var(--timeline-item-gap);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .chapter-select {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .timeline-view {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    --timeline-spacing: 100px;
+    --timeline-item-gap: 2rem;
+  }
+} 
